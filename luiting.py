@@ -80,7 +80,7 @@ class Luiting():
         return {"月": self.ymc[day.Lmc]+"月", "日":self.rmc[day.Ldi]}
     
     def month_element(self):
-        MonthFiveElements = {tuple(list("二四八")):"水動", tuple(list("三六九")):"木動", tuple(list("一五七")):"水土", tuple("十,十一,十二".split(",")):"金動"}
+        MonthFiveElements = {tuple(list("二四八")):"水動", tuple(list("三六九")):"木動", tuple(list("正五七")):"水土", tuple("十,十一,十二".split(",")):"金動"}
         return self.multi_key_dict_get(MonthFiveElements, self.lunar_date_d().get("月").replace("月", ""))
     
     def gangzhi(self):
