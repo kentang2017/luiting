@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 20 12:08:57 2021
-
-@author: kentang
-"""
-
-# -*- coding: utf-8 -*-
-"""
 Created on Sat Aug 22 18:30:06 2020
 @author: ken tang
 """
@@ -308,4 +301,4 @@ class Luiting():
 
     
 if __name__ == "__main__":
-    print(Luiting(2022,3,20,12,13).result())
+    print(Luiting(2021,12,20,18,13).result())
