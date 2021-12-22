@@ -1,4 +1,3 @@
-![Visitor Count](https://profile-counter.glitch.me/kentang2017/count.svg)
 # 雷霆曜氣研究書目
 
 雷霆曜氣乃造葬擇吉之法，載於道法會元之中。
