@@ -260,7 +260,7 @@ class Luiting():
         KingStar = {tuple(list("乙庚")):dict(zip(chinesemonth,list("子丑午卯辰巳午亥子酉戌亥"))),
         tuple(list("丁壬")):dict(zip(chinesemonth,list("子丑寅未申巳午未子丑戌亥"))),
         tuple(list("戊癸")):dict(zip(chinesemonth,list("子巳午卯辰巳戌亥申酉戌卯"))),
-        tuple(list("甲巳")):dict(zip(chinesemonth,list("辰丑寅卯申酉午未申丑寅亥"))),
+        tuple(list("甲己")):dict(zip(chinesemonth,list("辰丑寅卯申酉午未申丑寅亥"))),
         tuple(list("丙辛")):dict(zip(chinesemonth,list("辰巳寅卯辰酉戌未申酉寅卯")))}
         try:
             b = self.multi_key_dict_get(KingStar, ygz[0]).get(self.lunar_date_d().get("月").replace("月", ""))
