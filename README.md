@@ -11,6 +11,8 @@
 |      |     | 九天碧潭雷禱雨大法 道法會元   |   |
 |      |     | 九州社令陽雷大法 道法會元   |   |
 |      |     | 雷霆妙契 道法會元   |   |
+|      |     | 雷霆日期秘要   |   |
+
 
 # 聯繫方式
 ![看倏爍](https://github.com/kentang2017/yanqin_studies/blob/master/pic/qrcode_for_gh_1f2187149437_258.jpg?raw=true)
