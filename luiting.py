@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Aug 22 18:30:06 2020
+
 @author: ken tang
 """
 import re, sxtwl, itertools
+from config import *
 
 
 class Luiting():
@@ -16,7 +18,6 @@ class Luiting():
         self.cnum = "一二三四五六七八九十"
         self.tiangan = '甲乙丙丁戊己庚辛壬癸'
         self.dizhi = '子丑寅卯辰巳午未申酉戌亥'
-        self.gua = list("坎坤震巽中乾兌艮離")
         self.su = '角亢氐房心尾箕斗牛女虛危室壁奎婁胃昴畢觜參井鬼柳星張翼軫'
         self.ymc = [u"十一", u"十二", u"正", u"二", u"三", u"四", u"五", u"六", u"七", u"八", u"九", u"十" ]
         self.rmc = [u"初一", u"初二", u"初三", u"初四", u"初五", u"初六", u"初七", u"初八", u"初九", u"初十",
@@ -32,6 +33,20 @@ class Luiting():
             if k in keys:
                 return v
         return None
+    
+    #找節氣
+    def find_jieqi(self):
+        jieqi_list = twentyfourjieqi(self.year)
+        s_date = list(jieqi_list.keys())
+        date = datetime.strptime(str(self.year)+"-"+str(self.month)+"-"+str(self.day), '%Y-%m-%d').date()
+        closest = sorted(s_date, key=lambda d: abs( date  - d))[0]
+        test = {True:jieqi_list.get(s_date[s_date.index(closest) - 1]), False:jieqi_list.get(closest)}
+        return test.get(closest>date)
+    
+    def find_season(self):
+        jq = re.findall('..','立春雨水驚蟄春分清明穀雨立夏小滿芒種夏至小暑大暑立秋處暑白露秋分寒露霜降立冬小雪大雪冬至小寒大寒')
+        season = list("春春春春春春夏夏夏夏夏夏秋秋秋秋秋秋冬冬冬冬冬冬")
+        return dict(zip(jq, season)).get(self.find_jieqi())
     
     def yingyang(self, dg): 
         yy = {tuple(list(self.tiangan)[0::2]):"陽日", tuple(list(self.tiangan)[1::2]):"陰日"}
@@ -53,7 +68,7 @@ class Luiting():
         return jiazi
 
     def find_shun(self, gangzhi):
-        liujiashun_dict =  dict(zip(list(map(lambda x: tuple(x), [self.jiazi()[i:i + 10] for i in range(0, len(self.jiazi()), 10)])), self.jiazi()[0::10]))
+        liujiashun_dict = {tuple(self.jiazi()[0:10]):"甲子", tuple(self.jiazi()[10:20]):"甲戌", tuple(self.jiazi()[20:30]):"甲申", tuple(self.jiazi()[30:40]):"甲午", tuple(self.jiazi()[40:50]):"甲辰", tuple(self.jiazi()[50:60]):"甲寅"}
         return self.multi_key_dict_get(liujiashun_dict, gangzhi)
     
     def minutes_jiazi_d(self):
@@ -66,44 +81,41 @@ class Luiting():
         return minutelist
 
     def lunar_date(self):
-        lunar = sxtwl.Lunar()
-        day = lunar.getDayBySolar(self.year, self.month, self.day)
-        if day.Lleap:
-            ld =  "潤"+ self.ymc[day.Lmc]+"月"+self.rmc[day.Ldi]+"日"
-        else:
-            ld = self.ymc[day.Lmc]+"月"+ self.rmc[day.Ldi]+"日"
-        return ld
-    
+        day = sxtwl.fromSolar(self.year, self.month, self.day)
+        s = "%d年%s%d月%d日" % (day.getLunarYear(), 
+        '閏' if day.isLunarLeap() else '', day.getLunarMonth(), day.getLunarDay())
+        return s
+
     def lunar_date_d(self):
-        lunar = sxtwl.Lunar()
-        day = lunar.getDayBySolar(self.year, self.month, self.day)
-        return {"月": self.ymc[day.Lmc]+"月", "日":self.rmc[day.Ldi]}
+        day = sxtwl.fromSolar(self.year, self.month, self.day)
+        return {"月": str(day.getLunarMonth())+"月", "日":str(day.getLunarDay())}
     
     def month_element(self):
-        MonthFiveElements = {tuple(list("二四八")):"水動", tuple(list("三六九")):"木動", tuple(list("正五七")):"水土", tuple("十,十一,十二".split(",")):"金動"}
+        MonthFiveElements = {tuple(list("248")):"水動", tuple(list("369")):"木動", tuple(list("157")):"水土", tuple("10,11,12".split(",")):"金動"}
         return self.multi_key_dict_get(MonthFiveElements, self.lunar_date_d().get("月").replace("月", ""))
     
     def gangzhi(self):
-        lunar = sxtwl.Lunar()
-        cdate = lunar.getDayBySolar(self.year, self.month, self.day)
-        yy_mm_dd = self.tiangan[cdate.Lyear2.tg]+self.dizhi[cdate.Lyear2.dz],  self.tiangan[cdate.Lmonth2.tg]+self.dizhi[cdate.Lmonth2.dz],  self.tiangan[cdate.Lday2.tg]+self.dizhi[cdate.Lday2.dz]
-        timegz = lunar.getShiGz(cdate.Lday2.tg, self.hour)
-        new_hh = self.tiangan[timegz.tg]+self.dizhi[timegz.dz]
+        cdate = sxtwl.fromSolar(self.year, self.month, self.day)
+        Gan = self.tiangan
+        Zhi = self.dizhi
+        yTG = Gan[cdate.getYearGZ().tg] + Zhi[cdate.getYearGZ().dz]
+        mTG = Gan[cdate.getMonthGZ().tg] + Zhi[cdate.getMonthGZ().dz]
+        dTG  = Gan[cdate.getDayGZ().tg] + Zhi[cdate.getDayGZ().dz]
+        hTG = Gan[cdate.getHourGZ(self.hour).tg] + Zhi[cdate.getHourGZ(self.hour).dz]
         gangzhi_minute = self.minutes_jiazi_d().get(str(self.hour)+":"+str(self.minute))
-        return [yy_mm_dd[0], yy_mm_dd[1],  yy_mm_dd[2], new_hh, gangzhi_minute] 
+        return [yTG, mTG, dTG, hTG, gangzhi_minute]
     
     def find_three_uncle(self):
         dshun = self.find_shun(self.gangzhi()[2])
-        shun = self.jiazi()[0::10]
-        three_uncles = re.findall("..","雷公風伯雨伯")
-        ThunderStorm = dict(zip(three_uncles,[dict(zip(shun, i)) for i in [list(i) for i in "午申戌子寅辰,寅子寅寅午申,戌辰午辰戌子".split(",")]]))
-        return dict(zip(three_uncles, [ThunderStorm.get(i).get(dshun) for i in three_uncles]))
+        shun = re.findall("..","甲子甲寅甲辰甲午甲申甲戌")
+        ThunderStorm = {"雷公":dict(zip(shun,list("午申戌子寅辰"))), "風伯":dict(zip(shun,list("寅子寅寅午申"))), "雨伯":dict(zip(shun,list("戌辰午辰戌子")))}
+        return {"雷公": ThunderStorm.get("雷公").get(dshun), "風伯": ThunderStorm.get("風伯").get(dshun), "雨伯": ThunderStorm.get("雨伯").get(dshun)}
     
     def luitingyear(self):
         yg = self.gangzhi()[0][0]
         a = re.findall("..","血刃太陽月孛金水台將天罡溽土奇羅燥火")
         dlist = [tuple(i) for i in re.findall("..","甲己乙庚丙辛丁壬戊癸")]
-        b = [self.nlist(self.gua,i) for i in list("兌坤震震離")]
+        b = [list("兌艮離坎坤震巽中乾"), list("坤震巽中乾兌艮離坎"), list("震巽中乾兌艮離坎坤"), list("震巽中乾兌艮離坎坤"), list("離坎坤震巽中乾兌艮")]
         c = [dict(zip(a, i)) for i in b ]
         return self.multi_key_dict_get(dict(zip(dlist, c)), yg)
     
@@ -120,8 +132,8 @@ class Luiting():
         tuple(re.findall("..","丙寅癸巳甲辰乙卯")):dict(zip(self.nlist(self.dizhi, "申"), self.nlist(self.starlist, "天罡"))) ,
         tuple(re.findall("..","乙丑辛未丙子壬午丁亥戊戌己酉庚申")):dict(zip(self.nlist(self.dizhi,  "酉"), self.nlist(self.starlist, "台將"))),
         tuple(re.findall("..","癸卯甲寅")): dict(zip(self.nlist(self.dizhi,  "戌"), self.nlist(self.starlist, "金水")))}, ygz)
-        cnum_dict = dict(zip(list("正二三四五六七八九十")+["十一", "十二"],range(1,13)))
-        lmonth = dict(zip(range(1,13),list(luiting_month.values()))).get(cnum_dict.get(self.lunar_date_d().get("月").replace("月", "")))
+        cnum_dict = dict(zip(range(1,13), list("正二三四五六七八九十")+["十一", "十二"]))
+        lmonth = dict(zip(range(1,13),list(luiting_month.values()))).get(int(self.lunar_date_d().get("月").replace("月", "")))
         return lmonth
     
     def luitingday_ninegong(self):
@@ -194,6 +206,7 @@ class Luiting():
     def hour_arrow(self):
         return self.multi_key_dict_get(self.month_day_hour_arrow_round(), self.gangzhi()[3][0]).get(self.gangzhi()[3][1])
     
+    
     def result(self):
         chinesemonth = list("正二三四五六七八九十")+["十一","十二"]
         #MonthHourLightning = {tuple(re.findall("..","正丑二寅三卯四巳五午六未七申八酉九戌十亥")):"雷動"}
@@ -257,20 +270,32 @@ class Luiting():
         tuple(re.findall("..","丙寅丁丑己卯庚寅辛亥壬戌癸未癸巳")):"離"}, dgz)
     
         #月帝星
-        KingStar = {tuple(list("乙庚")):dict(zip(chinesemonth,list("子丑午卯辰巳午亥子酉戌亥"))),
-        tuple(list("丁壬")):dict(zip(chinesemonth,list("子丑寅未申巳午未子丑戌亥"))),
-        tuple(list("戊癸")):dict(zip(chinesemonth,list("子巳午卯辰巳戌亥申酉戌卯"))),
-        tuple(list("甲己")):dict(zip(chinesemonth,list("辰丑寅卯申酉午未申丑寅亥"))),
-        tuple(list("丙辛")):dict(zip(chinesemonth,list("辰巳寅卯辰酉戌未申酉寅卯")))}
+        KingStar = {tuple(list("乙庚")):dict(zip(range(1,13),list("子丑午卯辰巳午亥子酉戌亥"))),
+        tuple(list("丁壬")):dict(zip(range(1,13),list("子丑寅未申巳午未子丑戌亥"))),
+        tuple(list("戊癸")):dict(zip(range(1,13),list("子巳午卯辰巳戌亥申酉戌卯"))),
+        tuple(list("甲己")):dict(zip(range(1,13),list("辰丑寅卯申酉午未申丑寅亥"))),
+        tuple(list("丙辛")):dict(zip(range(1,13),list("辰巳寅卯辰酉戌未申酉寅卯")))}
         try:
-            b = self.multi_key_dict_get(KingStar, ygz[0]).get(self.lunar_date_d().get("月").replace("月", ""))
+            b = self.multi_key_dict_get(KingStar, ygz[0]).get(int(self.lunar_date_d().get("月").replace("月", "")))
         except IndexError:
-            b = self.multi_key_dict_get(KingStar, ygz[1]).get(self.lunar_date_d().get("月").replace("月", ""))
+            b = self.multi_key_dict_get(KingStar, ygz[1]).get(int(self.lunar_date_d().get("月").replace("月", "")))
         
         #飛定星宿主事法 十干起時例
-        tiandidun = [i+"遁" for i in list("天地地天天地地天天地")]
-        ddict = list(map(lambda x: dict(zip(self.dizhi, x)),[re.findall("..",i) for i in "女一虛二危三室四壁五奎六婁七胃八昴九畢十觜一參二,氐六亢五角四軫三翼二張一星十柳九鬼八井七參六觜五,斗二箕一尾十心九房八氐七亢六角五軫四翼三張二星一,婁七胃八昴九畢十觜一參二井三鬼四柳五星六張七翼八,危三室四壁五奎六婁七胃八昴九畢十觜一參二井三鬼四,胃八婁七奎六壁五室四危三虛二女一牛十斗九箕八尾十,尾四心三房二氐一亢十角九軫八翼七張六星五柳四鬼三,奎九婁十胃一昴二畢三觜四參五井六鬼七柳八星九張十,壁五奎六婁七胃八昴九畢十觜一參二井三鬼四柳五星六,軫十翼九張八星七柳六鬼五井四參三觜二畢一昴十胃九".split(",")]))
-        hourstar = dict(zip(self.tiangan, [{tiandidun[j]:ddict[j]} for j in range(10)])).get(dgz[0])
+        hourstar = {"甲":{"天遁":{"子":"女一", "丑":"虛二", "寅":"危三", "卯":"室四" , "辰":"壁五", "巳":"奎六", "午":"婁七", "未":"胃八", "申":"昴九", "酉":"畢十", "戌":"觜一", "亥":"參二"}}, 
+         "乙":{"地遁":{"子":"氐六", "丑":"亢五", "寅":"角四", "卯":"軫三" , "辰":"翼二", "巳":"張一", "午":"午十", "未":"柳九", "申":"鬼八", "酉":"井七", "戌":"參六", "亥":"觜五"}},
+         "丙":{"地遁":{"子":"斗二", "丑":"箕一", "寅":"尾十", "卯":"心九" , "辰":"房八", "巳":"氐七", "午":"亢六", "未":"角五", "申":"軫四", "酉":"翼三", "戌":"張二", "亥":"星一"}},
+         "丁":{"天遁":{"子":"婁七", "丑":"胃八", "寅":"昴九", "卯":"畢十" , "辰":"觜一", "巳":"參二", "午":"井三", "未":"鬼四", "申":"柳五", "酉":"星六", "戌":"張七", "亥":"翼八"}},
+         "戊":{"天遁":{"子":"危三", "丑":"室四", "寅":"壁五", "卯":"奎六" , "辰":"婁七", "巳":"胃八", "午":"昴九", "未":"畢十", "申":"觜一", "酉":"參二", "戌":"井三", "亥":"鬼四"}},
+         "己":{"地遁":{"子":"胃八", "丑":"婁七", "寅":"奎六", "卯":"壁五" , "辰":"辰四", "巳":"危三", "午":"虛二", "未":"女一", "申":"牛十", "酉":"斗九", "戌":"箕八", "亥":"尾十"}},
+         "庚":{"地遁":{"子":"尾四", "丑":"心三", "寅":"房二", "卯":"氐一" , "辰":"亢十", "巳":"角九", "午":"軫八", "未":"翼七", "申":"張六", "酉":"星五", "戌":"柳四", "亥":"鬼三"}},
+         "辛":{"天遁":{"子":"奎九", "丑":"婁十", "寅":"胃一", "卯":"昴二" , "辰":"畢三", "巳":"觜四", "午":"參五", "未":"井六", "申":"鬼七", "酉":"柳八", "戌":"星九", "亥":"張十"}},
+         "壬":{"天遁":{"子":"壁五", "丑":"奎六", "寅":"婁七", "卯":"胃八" , "辰":"昴九", "巳":"畢十", "午":"觜一", "未":"參二", "申":"井三", "酉":"鬼四", "戌":"柳五", "亥":"星六"}},
+         "癸":{"地遁":{"子":"軫十", "丑":"翼九", "寅":"張八", "卯":"星七" , "辰":"柳六", "巳":"鬼五", "午":"井四", "未":"參三", "申":"觜二", "酉":"畢一", "戌":"昴十", "亥":"胃九"}}
+        }.get(dgz[0])
+        
+     
+        
+        
         StarElementsWeather = {tuple(re.findall("..","角木心金心木心水尾木箕金斗土牛水女水虛水危水室金壁金奎水奎火婁金婁水婁火胃土胃金胃水胃火畢土畢木參金參木參水井火")):"風",
         tuple(re.findall("..","角金亢木氐金氐水氐土房金房木房土尾金牛火女土危金危火危木")): "陰", 
         tuple(re.findall("..","角火亢水氐火氐木箕土斗木牛金室火壁火婁土畢金畢水觜金觜水觜土井金井水井土鬼金鬼水柳金柳水")):"雨", 
@@ -290,6 +315,19 @@ class Luiting():
         dun_second = dict(zip(range(1,29), self.nlist(self.su, hstar[0]))).get(dun_num)
         dun_star = dict(zip(range(1,29), self.nlist(self.su, dun_second)[1:])).get(fiveelementdun.get(leyin))
         
+        #星禽應事
+        chinyy = dict(zip(list("婁畢井星軫參房亢牛壁危胃女奎斗虛張危昴箕角心氐鬼尾柳室觜"), list("陽"*14+"陰"*14))).get(dun_star)
+        chinw = self.multi_key_dict_get(dict(zip( [tuple(i) for i in "婁畢斗虛,井星張危,軫參昴箕,房亢角心,牛壁氐鬼,危胃尾柳,女奎室觜".split(",")], "應雨,應電,應風,應雷,應雲,應罡,應遁".split(","))), dun_star)
+        
+        #四季禽
+        season_chin = {"春":dict(zip([tuple(list(i)) for i in "室壁,奎,婁胃,昴畢,觜參井,鬼,柳星,張翼,軫角,亢,氐房心尾,箕斗,牛女,虛危".split(",")],  "多風雨,天大晴,雨風陰凍冷,登高天轉晴,遇大風起,星沉日月昏,雲霧起四山皎潔天還晴,風大發,夜雨日開晴,大風沙石起,雨風聲,朦朧天欲雨,微微濕雨形當到,大風起直至三更雲".split(","))),
+        "夏":dict(zip([tuple(list(i)) for i in "虛危室壁,奎婁胃昴,畢,觜參井,鬼柳,星張翼軫,角亢,氐房,心尾,箕斗牛女".split(",")], "半晴,雨霖霖,帶黃色,雨微聲,降大雨,更開晴,太陽現,雨風鳴,大降雨, 復天晴".split(","))),
+        "秋":dict(zip([tuple(list(i)) for i in "虛危室壁,奎婁胃昴,畢觜參井,鬼柳,星張翼軫,角亢,氐房心尾,箕斗牛女".split(",")], 
+        "大天晴,雨零零,天陰雨無雨有雲雲霧形,溫溫天色黃，客逃大路盡堪行,原無雨,雨奔程,微微雨,倚山行".split(","))),
+        "冬":dict(zip([tuple(list(i)) for i in "虛危室壁,奎,婁胃昴畢,觜參井,鬼柳星張,氐,翼軫,角亢,房心尾,箕斗牛女".split(",")], "天陰陰有雲無雨雨如金,微見大風起,半天晴,有雲雨或解為雲倚山行,天氣朗,還教有雨形,天陰凍,雨無傾,零零雨,空雨聲".split(",")))}
+                 
+        schin = self.multi_key_dict_get(season_chin.get(self.find_season()),dun_star)
+        
         luiday = self.multi_key_dict_get({tuple(list("甲庚")):"血刃",
         tuple(list("丙壬")):"金水",
         tuple(list("丁癸")):"月孛",
@@ -297,8 +335,13 @@ class Luiting():
         "戊":"紫炁",
         tuple(list("乙辛")):"太陽"}, dgz[0])
     
-        return {**{"日期時間":str(self.year)+"年"+str(self.month)+"月"+str(self.day)+"日"+str(self.hour)+"時"+str(self.minute)+"分", "干支":''.join([self.gangzhi()[i] + list("年月日時分")[i] for i in range(5)]),"雷霆年月日時箭":[self.year_arrow_round(), self.month_arrow(), self.day_arrow(), self.hour_arrow()], "雷霆月":self.luitingmonth(), "雷霆日方合炁":luiday, "雷霆時":self.luitinghour(),"雷霆年局":self.luitingyear(),"雷霆月局":self.luitingmonth_ninegong() ,"雷霆日局":self.luitingday_ninegong(),"月五行":self.month_element(), "農曆":self.lunar_date(), "日干支": dgz, "日陰陽":self.yingyang(dgz[0]) ,"日干支納音":leyin, "金虎大煞": GoldenTigerLocation, "流火凶星":LiuFireBadStarLocation, "值符":ZhiFuLocation, "傳音":PassVoiceLocation, "月帝星": b, "日帝星":KingStarLocation, "時星遁":list(hourstar.keys())[0], "時星":hstar[0], "遁數":hstar[1], "天氣":weather, "遁星":dun_star}, **self.find_three_uncle()} 
-
+        return {**{"日期時間":str(self.year)+"年"+str(self.month)+"月"+str(self.day)+"日"+str(self.hour)+"時"+str(self.minute)+"分", "干支":''.join([self.gangzhi()[i] + list("年月日時分")[i] for i in range(5)]), "節氣": self.find_jieqi(), "雷霆年月日時箭":[self.year_arrow_round(), self.month_arrow(), self.day_arrow(), self.hour_arrow()], "雷霆月":self.luitingmonth(), "雷霆日方合炁":luiday, "雷霆時":self.luitinghour(),"雷霆年局":self.luitingyear(),"雷霆月局":self.luitingmonth_ninegong() ,"雷霆日局":self.luitingday_ninegong(),"月五行":self.month_element(), "農曆":self.lunar_date(), "日干支": dgz, "日陰陽":self.yingyang(dgz[0]) ,"日干支納音":leyin, "金虎大煞": GoldenTigerLocation, "流火凶星":LiuFireBadStarLocation, "值符":ZhiFuLocation, "傳音":PassVoiceLocation, "月帝星": b, "日帝星":KingStarLocation, "時星遁":list(hourstar.keys())[0], "時星":hstar[0], "遁數":hstar[1], "天氣":weather,"星禽應事":chinyy+"日"+chinw, "四季禽星應事":schin  ,"遁星":dun_star}, **self.find_three_uncle()} 
     
 if __name__ == "__main__":
-    print(Luiting(2021,12,20,18,13).result())
+    print(Luiting(2022,3,6,2,0).result())
+
+
+
+
+
+
