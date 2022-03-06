@@ -316,8 +316,8 @@ class Luiting():
         dun_star = dict(zip(range(1,29), self.nlist(self.su, dun_second)[1:])).get(fiveelementdun.get(leyin))
         
         #星禽應事
-        chinyy = dict(zip(list("婁畢井星軫參房亢牛壁危胃女奎斗虛張危昴箕角心氐鬼尾柳室觜"), list("陽"*14+"陰"*14))).get(dun_star)
-        chinw = self.multi_key_dict_get(dict(zip( [tuple(i) for i in "婁畢斗虛,井星張危,軫參昴箕,房亢角心,牛壁氐鬼,危胃尾柳,女奎室觜".split(",")], "應雨,應電,應風,應雷,應雲,應罡,應遁".split(","))), dun_star)
+        chinyy = dict(zip(list("婁畢井星軫參房亢牛壁危胃女奎斗虛張翼昴箕角心氐鬼尾柳室觜"), list("陽"*14+"陰"*14))).get(dun_star)
+        chinw = self.multi_key_dict_get(dict(zip( [tuple(i) for i in "婁畢斗虛,井星張翼,軫參昴箕,房亢角心,牛壁氐鬼,危胃尾柳,女奎室觜".split(",")], "應雨,應電,應風,應雷,應雲,應罡,應遁".split(","))), dun_star)
         
         #四季禽
         season_chin = {"春":dict(zip([tuple(list(i)) for i in "室壁,奎,婁胃,昴畢,觜參井,鬼,柳星,張翼,軫角,亢,氐房心尾,箕斗,牛女,虛危".split(",")],  "多風雨,天大晴,雨風陰凍冷,登高天轉晴,遇大風起,星沉日月昏,雲霧起四山皎潔天還晴,風大發,夜雨日開晴,大風沙石起,雨風聲,朦朧天欲雨,微微濕雨形當到,大風起直至三更雲".split(","))),
@@ -335,10 +335,10 @@ class Luiting():
         "戊":"紫炁",
         tuple(list("乙辛")):"太陽"}, dgz[0])
     
-        return {**{"日期時間":str(self.year)+"年"+str(self.month)+"月"+str(self.day)+"日"+str(self.hour)+"時"+str(self.minute)+"分", "干支":''.join([self.gangzhi()[i] + list("年月日時分")[i] for i in range(5)]), "節氣": self.find_jieqi(), "雷霆年月日時箭":[self.year_arrow_round(), self.month_arrow(), self.day_arrow(), self.hour_arrow()], "雷霆月":self.luitingmonth(), "雷霆日方合炁":luiday, "雷霆時":self.luitinghour(),"雷霆年局":self.luitingyear(),"雷霆月局":self.luitingmonth_ninegong() ,"雷霆日局":self.luitingday_ninegong(),"月五行":self.month_element(), "農曆":self.lunar_date(), "日干支": dgz, "日陰陽":self.yingyang(dgz[0]) ,"日干支納音":leyin, "金虎大煞": GoldenTigerLocation, "流火凶星":LiuFireBadStarLocation, "值符":ZhiFuLocation, "傳音":PassVoiceLocation, "月帝星": b, "日帝星":KingStarLocation, "時星遁":list(hourstar.keys())[0], "時星":hstar[0], "遁數":hstar[1], "天氣":weather,"星禽應事":chinyy+"日"+chinw, "四季禽星應事":schin  ,"遁星":dun_star}, **self.find_three_uncle()} 
+        return {**{"日期時間":str(self.year)+"年"+str(self.month)+"月"+str(self.day)+"日"+str(self.hour)+"時"+str(self.minute)+"分", "干支":''.join([self.gangzhi()[i] + list("年月日時分")[i] for i in range(5)]), "節氣": self.find_jieqi(), "雷霆年月日時箭":[self.year_arrow_round(), self.month_arrow(), self.day_arrow(), self.hour_arrow()], "雷霆月":self.luitingmonth(), "雷霆日方合炁":luiday, "雷霆時":self.luitinghour(),"雷霆年局":self.luitingyear(),"雷霆月局":self.luitingmonth_ninegong() ,"雷霆日局":self.luitingday_ninegong(),"月五行":self.month_element(), "農曆":self.lunar_date(), "日干支": dgz, "日陰陽":self.yingyang(dgz[0]) ,"日干支納音":leyin, "金虎大煞": GoldenTigerLocation, "流火凶星":LiuFireBadStarLocation, "值符":ZhiFuLocation, "傳音":PassVoiceLocation, "月帝星": b, "日帝星":KingStarLocation, "時星遁":list(hourstar.keys())[0], "時星":hstar[0], "遁數":hstar[1], "天氣":weather, "星禽應事":chinyy+"日"+chinw, "四季禽星應事":schin ,"遁星":dun_star}, **self.find_three_uncle()} 
     
 if __name__ == "__main__":
-    print(Luiting(2022,3,6,2,0).result())
+    print(Luiting(2022,3,5,21,0).result())
 
 
 
