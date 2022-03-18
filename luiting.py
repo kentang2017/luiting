@@ -106,7 +106,6 @@ class Luiting():
         ThunderStorm = {"雷公":dict(zip(shun,list("午申戌子寅辰"))), "風伯":dict(zip(shun,list("寅子寅寅午申"))), "雨伯":dict(zip(shun,list("戌辰午辰戌子")))}
         return {"雷公": ThunderStorm.get("雷公").get(dshun), "風伯": ThunderStorm.get("風伯").get(dshun), "雨伯": ThunderStorm.get("雨伯").get(dshun)}
     
-    
     #雷霆年昇玄值向
     def luitingyear(self):
         #甲子尋豬甲戌寅，甲申辰上好安身，甲午本宮扶上馬，甲辰申上妙推輪，甲寅戌上定其位，便知雷處實通神，若逢子丑為讎路，逢癸中間跳兩辰，惟有丑寅連接路，輪其太歲在何門，便從停處起正月，卻從正月用星晨，即以月星歸中遁，細推此法莫傳人
@@ -225,9 +224,9 @@ class Luiting():
         bb = [dict(zip(c, i)) for i in dou]
         cc = [dict(zip(self.dizhi,i)) for i in xian]
         dd = [{dlist[i]: {"值":bb[i], "方向":cc[i]} }  for i in range(0,5)]
-        return self.multi_key_dict_get({**dd[0], **dd[1], **dd[2], **dd[3], **dd[4] }, dg), ghead
+        lui = re.findall("..","太陽月孛金水台將天罡土溽奇羅燥火丙乙水潦紫炁血刃")
+        return { "日值時星":self.multi_key_dict_get({**dd[0], **dd[1], **dd[2], **dd[3], **dd[4] }, dg), "時合炁山向": dict(zip(self.dizhi, dict(zip(self.dizhi, [new_list(lui, i) for i in lui])).get(hg)))}
 
-    
     def luitinghour(self):
         dgz = self.gangzhi()[2]
         hgz = self.gangzhi()[3]
@@ -275,7 +274,6 @@ class Luiting():
     
     def hour_arrow(self):
         return self.multi_key_dict_get(self.month_day_hour_arrow_round(), self.gangzhi()[3][0]).get(self.gangzhi()[3][1])
-    
     
     def pan(self):
         chinesemonth = list("正二三四五六七八九十")+["十一","十二"]
@@ -363,8 +361,6 @@ class Luiting():
          "癸":{"地遁":{"子":"軫十", "丑":"翼九", "寅":"張八", "卯":"星七" , "辰":"柳六", "巳":"鬼五", "午":"井四", "未":"參三", "申":"觜二", "酉":"畢一", "戌":"昴十", "亥":"胃九"}}
         }.get(dgz[0])
         
-     
-        
         StarElementsWeather = {tuple(re.findall("..","角木心金心木心水尾木箕金斗土牛水女水虛水危水室金壁金奎水奎火婁金婁水婁火胃土胃金胃水胃火畢土畢木參金參木參水井火")):"風",
         tuple(re.findall("..","角金亢木氐金氐水氐土房金房木房土尾金牛火女土危金危火危木")): "陰", 
         tuple(re.findall("..","角火亢水氐火氐木箕土斗木牛金室火壁火婁土畢金畢水觜金觜水觜土井金井水井土鬼金鬼水柳金柳水")):"雨", 
@@ -394,7 +390,6 @@ class Luiting():
         "秋":dict(zip([tuple(list(i)) for i in "虛危室壁,奎婁胃昴,畢觜參井,鬼柳,星張翼軫,角亢,氐房心尾,箕斗牛女".split(",")], 
         "大天晴,雨零零,天陰雨無雨有雲雲霧形,溫溫天色黃，客逃大路盡堪行,原無雨,雨奔程,微微雨,倚山行".split(","))),
         "冬":dict(zip([tuple(list(i)) for i in "虛危室壁,奎,婁胃昴畢,觜參井,鬼柳星張,氐,翼軫,角亢,房心尾,箕斗牛女".split(",")], "天陰陰有雲無雨雨如金,微見大風起,半天晴,有雲雨或解為雲倚山行,天氣朗,還教有雨形,天陰凍,雨無傾,零零雨,空雨聲".split(",")))}
-                 
         schin = self.multi_key_dict_get(season_chin.get(self.find_season()),dun_star)
         
         luiday = self.multi_key_dict_get({tuple(list("甲庚")):"血刃",
@@ -422,6 +417,7 @@ class Luiting():
                    "雷霆日方合炁":luiday, 
                    "雷霆日局":self.luitingday_ninegong(),
                    "雷霆時":self.luitinghour(),
+                   "雷霆時合炁值山向定局":self.luitingheqihour(),
                    "金虎大煞": GoldenTigerLocation, 
                    "流火凶星":LiuFireBadStarLocation, 
                    "值符":ZhiFuLocation, 
@@ -441,7 +437,7 @@ class Luiting():
     
     
 if __name__ == "__main__":
-    print(Luiting(1984,5,5,21,0).luitingheqihour())
+    print(Luiting(1984,5,5,21,0).pan())
 
 
 
