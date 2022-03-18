@@ -36,12 +36,7 @@ class Luiting():
     
     #找節氣
     def find_jieqi(self):
-        jieqi_list = twentyfourjieqi(self.year)
-        s_date = list(jieqi_list.keys())
-        date = datetime.strptime(str(self.year)+"-"+str(self.month)+"-"+str(self.day), '%Y-%m-%d').date()
-        closest = sorted(s_date, key=lambda d: abs( date  - d))[0]
-        test = {True:jieqi_list.get(s_date[s_date.index(closest) - 1]), False:jieqi_list.get(closest)}
-        return test.get(closest>date)
+        return jq(self.year, self.month, self.day, self.hour)
     
     def find_season(self):
         jq = re.findall('..','立春雨水驚蟄春分清明穀雨立夏小滿芒種夏至小暑大暑立秋處暑白露秋分寒露霜降立冬小雪大雪冬至小寒大寒')
@@ -111,14 +106,46 @@ class Luiting():
         ThunderStorm = {"雷公":dict(zip(shun,list("午申戌子寅辰"))), "風伯":dict(zip(shun,list("寅子寅寅午申"))), "雨伯":dict(zip(shun,list("戌辰午辰戌子")))}
         return {"雷公": ThunderStorm.get("雷公").get(dshun), "風伯": ThunderStorm.get("風伯").get(dshun), "雨伯": ThunderStorm.get("雨伯").get(dshun)}
     
-    def luitingyear(self):
-        yg = self.gangzhi()[0][0]
-        a = re.findall("..","血刃太陽月孛金水台將天罡溽土奇羅燥火")
-        dlist = [tuple(i) for i in re.findall("..","甲己乙庚丙辛丁壬戊癸")]
-        b = [list("兌艮離坎坤震巽中乾"), list("坤震巽中乾兌艮離坎"), list("震巽中乾兌艮離坎坤"), list("震巽中乾兌艮離坎坤"), list("離坎坤震巽中乾兌艮")]
-        c = [dict(zip(a, i)) for i in b ]
-        return self.multi_key_dict_get(dict(zip(dlist, c)), yg)
     
+    #雷霆年昇玄值向
+    def luitingyear(self):
+        #甲子尋豬甲戌寅，甲申辰上好安身，甲午本宮扶上馬，甲辰申上妙推輪，甲寅戌上定其位，便知雷處實通神，若逢子丑為讎路，逢癸中間跳兩辰，惟有丑寅連接路，輪其太歲在何門，便從停處起正月，卻從正月用星晨，即以月星歸中遁，細推此法莫傳人
+        yg = self.gangzhi()[0][0]
+        a = re.findall("..","血刃太陽月孛金水台將天罡土溽奇羅燥火")
+        dlist = [tuple(i) for i in re.findall("..","甲己乙庚丁壬戊癸")] + ["丙","辛"]
+        g =  list("兌艮離坎坤震巽中乾")
+        blist = [ [i] + new_list(g, i[0])[1:] for i in ["兌丁巳丑", "坎癸辰申", "震亥", "離寅", "坤申", "坎申"]]
+        aa = self.multi_key_dict_get(dict(zip(dlist, blist)), yg)
+        return dict(zip(aa, a))
+    
+    #雷霆年合炁
+    def luitingheqiyear_mountain(self):
+        yg = self.gangzhi()[0][0]
+        a = re.findall("..","血刃太陽月孛金水台將天罡土溽奇羅燥火丙乙水潦紫炁")
+        dlist = [tuple(i) for i in re.findall("..","丁癸乙辛甲庚")] + ["戊","己", "丙壬"]
+        middlegong = [new_list(a, i)[0:9] for i in ["月孛", "太陽", "血刃", "紫炁", "台將","金水"]]
+        mountain = ["中宮","乾甲山","兌丁巳丑山","艮丙山","離壬戌寅山","坎癸辰申山","坤乙山","震辰未亥山","巽辛山"] 
+        ddict = [dict(zip( mountain, i)) for i in middlegong]
+        return  self.multi_key_dict_get(dict(zip(dlist, ddict)), yg)
+    
+    def luitingheqiyear(self):
+        yg = self.gangzhi()[0][0]
+        a = re.findall("..","血刃太陽月孛金水台將天罡土溽奇羅燥火丙乙水潦紫炁")
+        dlist = [tuple(i) for i in re.findall("..","丁癸乙辛甲庚")] + ["戊","己", "丙壬"]
+        gong = ["乾","兌","艮","離","坎","坤","震","巽"] 
+        head = [new_list(a, i)[0:9] for i in ["紫炁", "水潦", "丙乙", "燥火", "奇羅","土溽"]]
+        ddict = [dict(zip( gong, i)) for i in head]
+        return  self.multi_key_dict_get(dict(zip(dlist, ddict)), yg)
+    
+    #雷霆月合炁
+    def luitingheqimonth(self):
+        mg = self.gangzhi()[1][0]
+        dlist = [tuple(i) for i in re.findall("..","甲己乙庚丙辛丁壬癸戊")] 
+        gong = ["中","乾","兌","艮","離","坎","坤","震","巽"] 
+        a = re.findall("..","血刃太陽月孛金水台將天罡土溽奇羅燥火丙乙水潦紫炁")
+        head = [new_list(a, i)[0:9] for i in ["天罡", "血刃", "燥火", "紫炁", "月孛"]]
+        ddict = [dict(zip( gong, i)) for i in head]
+        return self.multi_key_dict_get(dict(zip(dlist, ddict)), mg)
     
     def luitingmonth(self):
         ygz = self.gangzhi()[0]
@@ -135,6 +162,22 @@ class Luiting():
         cnum_dict = dict(zip(range(1,13), list("正二三四五六七八九十")+["十一", "十二"]))
         lmonth = dict(zip(range(1,13),list(luiting_month.values()))).get(int(self.lunar_date_d().get("月").replace("月", "")))
         return lmonth
+    
+    #雷霆日合炁值向順局
+    def luitingheqiday_clockwise(self):
+        a = re.findall("..","血刃太陽月孛金水台將天罡土溽奇羅燥火丙乙水潦紫炁")
+        dg = self.gangzhi()[2][1]
+        gong = ["中","乾","兌","艮","離","坎","坤","震","巽"] 
+        ddict = [new_list(a, i)[0:9]  for i in re.findall("..","太陽血刃紫炁水潦丙乙燥火奇羅土溽天罡台將金水月孛")]
+        return dict(zip(self.dizhi, [dict(zip(gong, i)) for i in ddict])).get(dg)
+     
+    #雷霆日合炁值向逆局
+    def luitingheqiday_anticlockwise(self):
+        a = re.findall("..","血刃太陽月孛金水台將天罡土溽奇羅燥火丙乙水潦紫炁")
+        dg = self.gangzhi()[2][1]
+        gong = ["中","乾","兌","艮","離","坎","坤","震","巽"] 
+        ddict = [new_list(a, i)[0:9]  for i in re.findall("..","太陽血刃紫炁水潦丙乙燥火奇羅土溽天罡台將金水月孛")]
+        return dict(zip(new_list(self.dizhi, "丑"), [dict(zip(gong, i)) for i in ddict])).get(dg)
     
     def luitingday_ninegong(self):
         a = self.nlist(self.starlist, "丙乙")
@@ -157,7 +200,34 @@ class Luiting():
             flist = dict(zip(e, i))
             d.update(flist)
         return d
+    
+    #雷霆時合炁值山向定局
+    def luitingheqihour(self):
+        dg = self.gangzhi()[3][0]
+        hg = self.gangzhi()[3][1]
+        dou =  [re.findall("..","太陽奇羅天罡丙乙燥火土溽天罡台將金水太陽台將台將"),
+                re.findall("..","水潦燥火紫炁金水水潦金水土溽水潦丙乙金水太陽天罡"),
+                re.findall("..","台將月孛太陽血刃紫炁丙乙血刃血刃土溽台將奇羅紫炁"),
+                re.findall("..","土溽紫炁月孛土溽天罡紫炁丙乙太陽血刃水潦丙乙燥火"),
+                re.findall("..","奇羅天罡燥火燥火月孛血刃金水奇羅月孛奇羅水潦月孛")]
+        xian = [re.findall("..","燥火太陽天罡月孛紫炁燥火太陽天罡月孛紫炁燥火太陽"),
+                re.findall("..","天罡月孛紫炁水潦太陽天罡月孛紫炁燥火太陽天罡月孛"),
+                re.findall("..","紫炁燥火太陽天罡月孛紫炁燥火太陽天罡月孛紫炁燥火"),
+                re.findall("..","太陽天罡月孛紫炁紫炁太陽天罡月孛紫炁燥火太陽天罡"),
+                re.findall("..","月孛紫炁燥火太陽天罡月孛紫炁燥火太陽天罡月孛紫炁")]
+        dlist = [tuple(i) for i in re.findall("..","甲己乙庚丙辛丁壬癸戊")] 
+        c = list("癸艮甲乙巽丙丁坤庚辛乾壬")
+        zhi_to_direction = dict(zip(self.dizhi, list("癸艮甲乙巽丙丁坤庚辛乾壬")))
+        ghead = [new_list(self.tiangan, i) for i in list("甲丙戊庚壬")]
+        gong = ["中","乾","兌","艮","離","坎","坤","震","巽"] 
+        ddlist = {}
+        aa = [dict(zip(self.dizhi, i)) for i in ghead]
+        bb = [dict(zip(c, i)) for i in dou]
+        cc = [dict(zip(self.dizhi,i)) for i in xian]
+        dd = [{dlist[i]: {"值":bb[i], "方向":cc[i]} }  for i in range(0,5)]
+        return self.multi_key_dict_get({**dd[0], **dd[1], **dd[2], **dd[3], **dd[4] }, dg), ghead
 
+    
     def luitinghour(self):
         dgz = self.gangzhi()[2]
         hgz = self.gangzhi()[3]
@@ -207,7 +277,7 @@ class Luiting():
         return self.multi_key_dict_get(self.month_day_hour_arrow_round(), self.gangzhi()[3][0]).get(self.gangzhi()[3][1])
     
     
-    def result(self):
+    def pan(self):
         chinesemonth = list("正二三四五六七八九十")+["十一","十二"]
         #MonthHourLightning = {tuple(re.findall("..","正丑二寅三卯四巳五午六未七申八酉九戌十亥")):"雷動"}
         ygz = self.gangzhi()[0]
@@ -295,7 +365,6 @@ class Luiting():
         
      
         
-        
         StarElementsWeather = {tuple(re.findall("..","角木心金心木心水尾木箕金斗土牛水女水虛水危水室金壁金奎水奎火婁金婁水婁火胃土胃金胃水胃火畢土畢木參金參木參水井火")):"風",
         tuple(re.findall("..","角金亢木氐金氐水氐土房金房木房土尾金牛火女土危金危火危木")): "陰", 
         tuple(re.findall("..","角火亢水氐火氐木箕土斗木牛金室火壁火婁土畢金畢水觜金觜水觜土井金井水井土鬼金鬼水柳金柳水")):"雨", 
@@ -335,10 +404,44 @@ class Luiting():
         "戊":"紫炁",
         tuple(list("乙辛")):"太陽"}, dgz[0])
     
-        return {**{"日期時間":str(self.year)+"年"+str(self.month)+"月"+str(self.day)+"日"+str(self.hour)+"時"+str(self.minute)+"分", "干支":''.join([self.gangzhi()[i] + list("年月日時分")[i] for i in range(5)]), "節氣": self.find_jieqi(), "雷霆年月日時箭":[self.year_arrow_round(), self.month_arrow(), self.day_arrow(), self.hour_arrow()], "雷霆月":self.luitingmonth(), "雷霆日方合炁":luiday, "雷霆時":self.luitinghour(),"雷霆年局":self.luitingyear(),"雷霆月局":self.luitingmonth_ninegong() ,"雷霆日局":self.luitingday_ninegong(),"月五行":self.month_element(), "農曆":self.lunar_date(), "日干支": dgz, "日陰陽":self.yingyang(dgz[0]) ,"日干支納音":leyin, "金虎大煞": GoldenTigerLocation, "流火凶星":LiuFireBadStarLocation, "值符":ZhiFuLocation, "傳音":PassVoiceLocation, "月帝星": b, "日帝星":KingStarLocation, "時星遁":list(hourstar.keys())[0], "時星":hstar[0], "遁數":hstar[1], "天氣":weather, "星禽應事":chinyy+"日"+chinw, "四季禽星應事":schin ,"遁星":dun_star}, **self.find_three_uncle()} 
+        return {**{"日期時間":str(self.year)+"年"+str(self.month)+"月"+str(self.day)+"日"+str(self.hour)+"時"+str(self.minute)+"分", 
+                   "干支":''.join([self.gangzhi()[i] + list("年月日時分")[i] for i in range(5)]),
+                   "農曆":self.lunar_date(),
+                   "節氣": self.find_jieqi(), 
+                   "月五行":self.month_element(),
+                   "日干支": dgz, 
+                   "日陰陽":self.yingyang(dgz[0]),
+                   "日干支納音":leyin,
+                   "雷霆年月日時箭":[self.year_arrow_round(), self.month_arrow(), self.day_arrow(), self.hour_arrow()],   
+                   "雷霆年昇玄值向":self.luitingyear(),
+                   "雷霆年合炁到向":self.luitingheqiyear_mountain(),
+                   "雷霆年合炁":self.luitingheqiyear(),
+                   "雷霆月局":self.luitingmonth_ninegong(),
+                   "雷霆月合炁":self.luitingheqimonth(),
+                   "雷霆月":self.luitingmonth(), 
+                   "雷霆日方合炁":luiday, 
+                   "雷霆日局":self.luitingday_ninegong(),
+                   "雷霆時":self.luitinghour(),
+                   "金虎大煞": GoldenTigerLocation, 
+                   "流火凶星":LiuFireBadStarLocation, 
+                   "值符":ZhiFuLocation, 
+                   "傳音":PassVoiceLocation, 
+                   "月帝星": b, 
+                   "日帝星":KingStarLocation, 
+                   "時星遁":list(hourstar.keys())[0], 
+                   "時星":hstar[0], 
+                   "遁數":hstar[1], 
+                   "天氣":weather, 
+                   "星禽應事":chinyy+"日"+chinw,
+                   "四季禽星應事":schin ,
+                   "遁星":dun_star}, 
+                   **self.find_three_uncle()} 
+    
+    
+    
     
 if __name__ == "__main__":
-    print(Luiting(2022,3,5,21,0).result())
+    print(Luiting(1984,5,5,21,0).luitingheqihour())
 
 
 
