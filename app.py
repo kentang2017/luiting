@@ -83,11 +83,11 @@ with tabs[0]:
         try:
             if instant:
                 now = datetime.datetime.now(pytz.timezone('Asia/Hong_Kong'))
-                results = gen_results(now.year, now.month, now.day, now.hour, now.minute)
-                st.session_state.render_default = False
+                r_year, r_month, r_day, r_hour, r_minute = now.year, now.month, now.day, now.hour, now.minute
             else:
-                results = gen_results(my, mm, md, mh, mmin)
-                st.session_state.render_default = False
+                r_year, r_month, r_day, r_hour, r_minute = my, mm, md, mh, mmin
+            results = gen_results(r_year, r_month, r_day, r_hour, r_minute)
+            st.session_state.render_default = False
 
             if results:
                 pan = results["pan"]
@@ -184,7 +184,7 @@ with tabs[0]:
 
                 # 日合炁順逆局
                 with st.expander("雷霆日合炁順逆局", expanded=False):
-                    lt_obj = Luiting(my, mm, md, mh, mmin)
+                    lt_obj = Luiting(r_year, r_month, r_day, r_hour, r_minute)
                     st.markdown("**順局**：")
                     st.markdown(format_dict(lt_obj.luitingheqiday_clockwise(), 1))
                     st.markdown("---")
@@ -233,9 +233,6 @@ st.markdown(
         border-radius: 6px;
         font-weight: 500;
         transition: all 0.15s ease-in-out;
-    }
-
-    .stButton button {
         background-color: #4e7496;
         color: white;
     }
