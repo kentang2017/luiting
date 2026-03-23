@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import html
 import streamlit as st
 import datetime
 import pytz
 from contextlib import contextmanager, redirect_stdout
 from io import StringIO
 from luiting import Luiting
+
+PALACE_NAMES = frozenset('巽離坤震中兌艮坎乾')
 
 # Initialize session state to control rendering
 if 'render_default' not in st.session_state:
@@ -70,7 +73,77 @@ def gen_results(year, month, day, hour, minute):
     pan = lt.pan()
     gangzhi = lt.gangzhi()
     gz = f"{gangzhi[0]}年 {gangzhi[1]}月 {gangzhi[2]}日 {gangzhi[3]}時 {gangzhi[4]}分"
-    return {"pan": pan, "gz": gz}
+    clockwise = lt.luitingheqiday_clockwise()
+    anticlockwise = lt.luitingheqiday_anticlockwise()
+    return {"pan": pan, "gz": gz, "clockwise": clockwise, "anticlockwise": anticlockwise}
+
+
+def build_nine_palace_html(pan, clockwise, anticlockwise):
+    """構建九宮格排盤HTML"""
+    palace_order = [
+        ['巽', '離', '坤'],
+        ['震', '中', '兌'],
+        ['艮', '坎', '乾'],
+    ]
+
+    # Map special markers to palaces
+    marker_keys = ['金虎大煞', '流火凶星', '值符', '傳音', '日帝星']
+    palace_markers = {}
+    for key in marker_keys:
+        val = pan.get(key)
+        if val:
+            palace_markers.setdefault(val, []).append(key)
+
+    year_heqi = pan.get('雷霆年合炁') or {}
+    month_heqi = pan.get('雷霆月合炁') or {}
+    month_ju = pan.get('雷霆月局') or {}
+    day_ju = pan.get('雷霆日局') or {}
+    cw = clockwise or {}
+    acw = anticlockwise or {}
+
+    # Extract year shengxuan values by palace (first char of key)
+    year_sx = {}
+    for k, v in (pan.get('雷霆年昇玄值向') or {}).items():
+        if k and k[0] in PALACE_NAMES:
+            year_sx[k[0]] = v
+
+    cells_html = ""
+    for row in palace_order:
+        for p in row:
+            lines = []
+
+            data_pairs = [
+                ('年值', year_sx.get(p, '')),
+                ('年合', year_heqi.get(p, '')),
+                ('月合', month_heqi.get(p, '')),
+                ('月局', month_ju.get(p, '')),
+                ('日局', day_ju.get(p, '')),
+                ('順局', cw.get(p, '')),
+                ('逆局', acw.get(p, '')),
+            ]
+
+            for label, val in data_pairs:
+                if val:
+                    lines.append(
+                        f'<div class="np-item">'
+                        f'<span class="np-lbl">{label}</span> {html.escape(str(val))}'
+                        f'</div>'
+                    )
+
+            marks = palace_markers.get(p, [])
+            mark_html = ''.join(
+                f'<div class="np-mark">⚠ {html.escape(m)}</div>' for m in marks
+            )
+
+            cells_html += (
+                f'<div class="np-cell">'
+                f'<div class="np-title">{p}</div>'
+                f'<div class="np-data">{"".join(lines)}</div>'
+                f'{mark_html}'
+                f'</div>'
+            )
+
+    return f'<div class="np-grid">{cells_html}</div>'
 
 
 # 創建標籤頁
@@ -102,6 +175,13 @@ with tabs[0]:
                     st.markdown(f"**日干支**：{pan.get('日干支')}")
                     st.markdown(f"**日陰陽**：{pan.get('日陰陽')}")
                     st.markdown(f"**日干支納音**：{pan.get('日干支納音')}")
+
+                # 九宮格排盤
+                with st.expander("九宮格排盤", expanded=True):
+                    grid_html = build_nine_palace_html(
+                        pan, results.get("clockwise", {}), results.get("anticlockwise", {})
+                    )
+                    st.markdown(grid_html, unsafe_allow_html=True)
 
                 # 雷霆箭
                 with st.expander("雷霆年月日時箭", expanded=True):
@@ -184,12 +264,11 @@ with tabs[0]:
 
                 # 日合炁順逆局
                 with st.expander("雷霆日合炁順逆局", expanded=False):
-                    lt_obj = Luiting(r_year, r_month, r_day, r_hour, r_minute)
                     st.markdown("**順局**：")
-                    st.markdown(format_dict(lt_obj.luitingheqiday_clockwise(), 1))
+                    st.markdown(format_dict(results.get("clockwise", {}), 1))
                     st.markdown("---")
                     st.markdown("**逆局**：")
-                    st.markdown(format_dict(lt_obj.luitingheqiday_anticlockwise(), 1))
+                    st.markdown(format_dict(results.get("anticlockwise", {}), 1))
 
                 print(
                     f"{pan.get('日期時間')} |\n"
@@ -219,6 +298,42 @@ with tabs[1]:
 st.markdown(
     """
     <style>
+    .np-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        margin: 8px 0;
+    }
+    .np-cell {
+        background: #252730;
+        border: 1px solid #4a4a5a;
+        border-radius: 6px;
+        padding: 8px 6px;
+        text-align: center;
+    }
+    .np-title {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #FF4B4B;
+        border-bottom: 1px solid #4a4a5a;
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+    }
+    .np-item {
+        font-size: 0.85em;
+        color: #E0E0E0;
+        margin: 2px 0;
+    }
+    .np-lbl {
+        color: #8899aa;
+        margin-right: 2px;
+    }
+    .np-mark {
+        font-size: 0.8em;
+        color: #FFD700;
+        font-weight: bold;
+        margin-top: 3px;
+    }
     .stExpander {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
