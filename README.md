@@ -1,8 +1,33 @@
-# 雷霆曜氣研究書目
+# **Python 雷霆曜氣 Luiting 雷霆曜氣排盤**
+[![TG Me](https://img.shields.io/badge/chat-on%20telegram-blue)](https://t.me/haizhonggum)
+[![TG Channel](https://img.shields.io/badge/chat-on%20telegram-red)](https://t.me/numerology_coding)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg?logo=paypal&style=flat-square)](https://www.paypal.me/kinyeah)&nbsp;
 
-雷霆曜氣乃造葬擇吉之法，載於道法會元之中。
+## 1. 導讀 Introduction
 
-# 古今書目列表
+雷霆曜氣乃造葬擇吉之法，載於道法會元之中。雷霆曜氣源於道教雷法體系，是古代擇日學中一門獨特的術數。其理論根基在於天地陰陽五行之運化，結合二十八宿、九宮飛布、天干地支等要素，推算年月日時之吉凶方位，以供造葬擇吉之用。
+
+道法會元卷一百二十九載：「雷霆玄妙，出乎樞機之造化，達乎奧理之冥途。五行運用，不出陰陽。至道之內，樞陽機陰，雷善霆惡，萬物厥有至符。」其法以卯為雷門，子為雷穴，巽為雷戶，離為雷所，運乎坤，傍乎乾，藏乎子，出乎震。翼軫主雷，虛危主雪，箕星好風，畢星好雨，星宿主晴，各得所在之方，以觀天象、測氣候、定吉凶。
+
+本程式依據古籍記載，結合現代天文曆法計算，提供雷霆曜氣年、月、日、時之排盤，包括雷霆合炁、昇玄值向、金虎大煞、流火凶星、值符、傳音、帝星等諸項推算，以便用者查閱參考。
+
+雷霆曜氣排盤 Streamlit 應用：https://luiting.streamlit.app
+
+## 2. 起課方式 Quickstart
+```python
+from luiting import Luiting
+
+year = 1984
+month = 5
+day = 5
+hour = 21
+minute = 0
+
+result = Luiting(year, month, day, hour, minute).pan()
+print(result)
+```
+
+## 3. 古今書目列表
 
 | 年份          | 作者           | 書名                                            | 備註       |
 | ------------- | ------------- | --------------------------------------------- | ------------- |
@@ -19,14 +44,13 @@
 |      |  佚名  | 雷霆妙契    |  收錄在道法會元內。 |
 |      |  佚名   | 新鍥全補發微曆正通書大全乾集  |  書內卷二記載雷霆白虎大殺入中宮 |
 |      |  佚名   | 雷門秘訣歌  | 收錄於新刻萬法歸宗內。  |
-|      |  佚名   | 雷霆日期秘要   |  清末民國間朱墨雙色精寫本，一函一冊。紙捻毛裝。共計81頁162面。此為占卜術數類著作，查無著錄，極為稀見。朱墨雙色手書，首書“玄機妙訣”繪制各式不同“掌訣”，後用墨色、朱色筆書寫真經秘訣，書法精整，非凡儒為之。內有圖繪人像三幅，掛相圖十幅，皆精工。頗為難得，識者寶之。末尾兩三頁有修，如圖，無大礙。八品。 |
-|      | 佚名 | 祈禱全書雷霆合氣 : 3卷 |藏於華東師範大學的圖書館內。 |  
+|      |  佚名   | 雷霆日期秘要   |  清末民國間朱墨雙色精寫本，一函一冊。紙捻毛裝。共計81頁162面。此為占卜術數類著作，查無著錄，極為稀見。朱墨雙色手書，首書"玄機妙訣"繪制各式不同"掌訣"，後用墨色、朱色筆書寫真經秘訣，書法精整，非凡儒為之。內有圖繪人像三幅，掛相圖十幅，皆精工。頗為難得，識者寶之。末尾兩三頁有修，如圖，無大礙。八品。 |
+|      | 佚名 | 祈禱全書雷霆合氣 : 3卷 |藏於華東師範大學的圖書館內。 |
 
+## **4. 微信公眾號**
+![微信公眾號二維碼](https://raw.githubusercontent.com/kentang2017/kinliuren/refs/heads/master/pic/%E5%9C%96%E7%89%87_20260316084147.jpg)
 
-# 聯繫方式
-![看倏爍](https://github.com/kentang2017/yanqin_studies/blob/master/pic/qrcode_for_gh_1f2187149437_258.jpg?raw=true)
- 
-# License
+## 5. License
 The MIT License(http://opensource.org/licenses/MIT)
 
-Please feel free to use and contribute to the development. 
+Please feel free to use and contribute to the development.
