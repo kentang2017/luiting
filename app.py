@@ -177,7 +177,7 @@ with tabs[0]:
                     st.markdown(f"**日干支納音**：{pan.get('日干支納音')}")
 
                 # 九宮格排盤
-                with st.expander("九宮格排盤", expanded=True):
+                with st.expander("雷霆曜氣綜合排盤", expanded=True):
                     grid_html = build_nine_palace_html(
                         pan, results.get("clockwise", {}), results.get("anticlockwise", {})
                     )
