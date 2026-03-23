@@ -49,6 +49,8 @@ st.set_page_config(
     page_icon="⚡"
 )
 
+st.title("堅雷霆曜氣")
+
 # 側邊欄輸入
 with st.sidebar:
     st.header("排盤參數設置")
