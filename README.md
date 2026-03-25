@@ -47,7 +47,7 @@
 
 Luiting (雷霆曜氣) is a date-selection method from the Daoist Thunder Rites tradition, documented in the *Daofa Huiyuan* (道法會元). It is a unique branch of ancient Chinese date-selection science whose theoretical foundation lies in the transformation of Yin-Yang and the Five Elements, combined with the 28 Lunar Mansions, Nine Palace flying-star distribution, Heavenly Stems and Earthly Branches, to calculate auspicious and inauspicious directions for each year, month, day, and hour — primarily for construction and burial date selection.
 
-As recorded in Volume 129 of the *Daofa Huiyuan*: *"The mysteries of thunder emerge from the creation of the cosmic pivot, reaching into the dark depths of profound principles. The workings of the Five Elements do not depart from Yin and Yang."* The method designates Mao (卯) as the Thunder Gate, Zi (子) as the Thunder Cave, Xun (巽) as the Thunder Door, and Li (離) as the Thunder Place. The Yi and Zhen mansions govern thunder; Xu and Wei govern snow; Ji star favours wind; Bi star favours rain; and the Xing mansion governs clear skies.
+As recorded in Volume 129 of the *Daofa Huiyuan*: *"The mysteries of thunder emerge from the creation of the cosmic pivot, reaching into the dark depths of profound principles. The workings of the Five Elements do not depart from Yin and Yang."* The method designates Mao (卯) as the Thunder Gate, Zi (子) as the Thunder Cave, Xun (巽) as the Thunder Door, and Li (離) as the Thunder Place. The Yi and Zhen mansions govern thunder; Xu and Wei govern snow; Ji star favors wind; Bi star favors rain; and the Xing mansion governs clear skies.
 
 This program combines classical texts with modern astronomical calculations to provide comprehensive Luiting charts, including Heqi, Shengxuan direction, Golden Tiger Sha, Flowing Fire inauspicious star, Value Talisman, Sound Transmission, Emperor Star, and more.
 
@@ -66,7 +66,7 @@ This program combines classical texts with modern astronomical calculations to p
 ### Installation 安裝
 
 ```bash
-pip install sxtwl ephem pytz streamlit
+pip install -r requirements.txt
 ```
 
 ### Python API Usage 程式調用
