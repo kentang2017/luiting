@@ -2,7 +2,7 @@
 
 # ⚡ Luiting 雷霆曜氣排盤
 
-### Daoist Thunder Qi Divination Chart Generator | 道教雷霆曜氣擇日排盤系統
+### Daoist Thunder Qi Divination Chart Generator | 以雷為主題、藏於道藏里的擇吉排盤系統
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://luiting.streamlit.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](http://opensource.org/licenses/MIT)
