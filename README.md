@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ Luiting 雷霆曜氣排盤
+# ⚡ Luitingyaoqi 雷霆曜氣排盤
 
 ### Daoist Thunder Qi Divination Chart Generator | 以雷為主題、藏於道藏里的擇吉排盤系統
 
