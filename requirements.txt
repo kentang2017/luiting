@@ -2,3 +2,5 @@ streamlit
 sxtwl
 ephem
 pytz
+plotly
+pandas
