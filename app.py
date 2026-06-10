@@ -491,6 +491,11 @@ try:
     day_heqi = final_results.get("clockwise", {}) or pan.get("雷霆日局", {}) or {}
     hour_raw = pan.get("雷霆時合炁值山向定局", {}) or {}
 
+    # 確保年合炁 中宮有起星 (來源現在已包含，但這裡明確設定以保證)
+    year_center = strict.get("year_center_star", "") or ""
+    if year_center:
+        year_heqi["中"] = year_center
+
     # 修正時合炁：加入起星（雷霆時）到中宮，並從時合炁山向對應宮位填星
     hour_heqi = {}
     起時星 = pan.get("雷霆時") or "-"
