@@ -401,31 +401,6 @@ def render_key_metrics(pan: Dict, strict: Dict):
 
 # create_plotly_nine_palace 已移除（盤式改用 SVG，不再使用 Plotly 建構九宮格）
 
-
-def add_history_entry(pan: Dict, gz: str, year: int, month: int, day: int, hour: int, minute: int):
-    """簡單歷史記錄（session_state）"""
-    if "history" not in st.session_state:
-        st.session_state.history = []
-    entry = {
-        "time": f"{year}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}",
-        "gz": gz,
-        "main_sha": pan.get("金虎大煞"),
-        "arrow": pan.get("雷霆年月日時箭", [None])[0],
-    }
-    # 避免重複
-    if not st.session_state.history or st.session_state.history[0]["time"] != entry["time"]:
-        st.session_state.history.insert(0, entry)
-    st.session_state.history = st.session_state.history[:8]  # 限 8 筆
-
-
-def render_history():
-    """顯示可點擊的歷史"""
-    if st.session_state.get("history"):
-        st.markdown("**最近排盤歷史（點擊可參考，實際需重新輸入日期）**")
-        for h in st.session_state.history[:5]:
-            st.caption(f"{h['time']} | {h['gz']} | 主煞:{h.get('main_sha')} | 年箭:{h.get('arrow')}")
-
-
 def build_nine_palace_svg(heqi: dict, level: str = "") -> str:
     """純 SVG 九宮格盤式（不使用 Plotly）。五行著色，傳統美學。響應式滿版。"""
     layout = [
@@ -493,14 +468,7 @@ def build_nine_palace_svg(heqi: dict, level: str = "") -> str:
 # 主要內容
 # ===========================================================================
 
-# 主 Tabs：總覽 / 詳情 / 古籍 / 工具（已移除視覺化 sub-tab）
-main_tabs = st.tabs([
-    "📊 總覽 Overview",
-    "📜 年月日時詳情",
-    "📖 古籍對照 & 原文依據",
-    "🛠️ 工具與匯出"
-])
-
+# 直接顯示排盤（已移除頂部 Tabs，頁首直接呈現合炁排盤）
 # 重新計算一次以取得最新 results（r_year 等已在 sidebar 後統一定義）
 try:
     final_results = gen_results(r_year, r_month, r_day, r_hour, r_minute)
@@ -508,161 +476,62 @@ try:
     strict = final_results.get("strict", {})
     gz = final_results["gz"]
 
-    # 記錄歷史
-    add_history_entry(pan, gz, r_year, r_month, r_day, r_hour, r_minute)
+    # ===================== 直接顯示排盤 =====================
+    st.subheader(f"📋 {pan.get('日期時間')}")
+    st.markdown(f"**{gz}**")
 
-    ui_mode = st.session_state.get("ui_mode", "新手模式（推薦）")
-    is_advanced = "進階" in ui_mode
+    st.divider()
 
-    # ===================== 總覽 Tab =====================
-    with main_tabs[0]:
-        st.subheader(f"📋 {pan.get('日期時間')}")
-        st.markdown(f"**{gz}**")
+    # 合炁排盤 - 使用純 SVG（不使用 Plotly），並以分頁呈現年月日時四版
+    st.markdown("**合炁排盤**")
 
-        st.divider()
+    # 準備四個層級的資料（盡量相容現有 pan 結構）
+    year_heqi = pan.get("雷霆年合炁", {}) or {}
+    month_heqi = pan.get("雷霆月合炁", {}) or {}
+    day_heqi = final_results.get("clockwise", {}) or pan.get("雷霆日局", {}) or {}
+    hour_raw = pan.get("雷霆時合炁值山向定局", {}) or {}
 
-        # 合炁排盤 - 使用純 SVG（不使用 Plotly），並以分頁呈現年月日時四版
-        st.markdown("**合炁排盤**")
+    # 修正時合炁：加入起星（雷霆時）到中宮，並從時合炁山向對應宮位填星
+    hour_heqi = {}
+    起時星 = pan.get("雷霆時") or "-"
+    hour_heqi["中"] = 起時星
 
-        # 準備四個層級的資料（盡量相容現有 pan 結構）
-        year_heqi = pan.get("雷霆年合炁", {}) or {}
-        month_heqi = pan.get("雷霆月合炁", {}) or {}
-        day_heqi = pan.get("雷霆日局", {}) or final_results.get("clockwise", {}) or {}
-        hour_raw = pan.get("雷霆時合炁值山向定局", {}) or {}
-        hour_heqi = {}
-        if isinstance(hour_raw, dict):
-            for k, v in hour_raw.items():
-                if isinstance(v, dict):
-                    hour_heqi.update({kk: str(vv) for kk, vv in v.items() if not isinstance(vv, (dict, list))})
-                else:
-                    hour_heqi[str(k)] = str(v)
+    gong_to_branch = {
+        "乾": "戌", "兌": "酉", "艮": "丑", "離": "午",
+        "坎": "子", "坤": "未", "震": "卯", "巽": "辰",
+    }
+    時山向 = hour_raw.get("時合炁山向", {}) if isinstance(hour_raw, dict) else {}
+    for p, br in gong_to_branch.items():
+        if br and br in 時山向:
+            hour_heqi[p] = 時山向[br]
+        elif p not in hour_heqi:
+            hour_heqi[p] = "-"
 
-        heqi_subtabs = st.tabs(["年合炁", "月合炁", "日合炁", "時合炁"])
+    heqi_subtabs = st.tabs(["年合炁", "月合炁", "日合炁", "時合炁"])
 
-        with heqi_subtabs[0]:
-            svg = build_nine_palace_svg(year_heqi)
-            st.markdown(svg, unsafe_allow_html=True)
+    with heqi_subtabs[0]:
+        svg = build_nine_palace_svg(year_heqi)
+        st.markdown(svg, unsafe_allow_html=True)
 
-        with heqi_subtabs[1]:
-            svg = build_nine_palace_svg(month_heqi)
-            st.markdown(svg, unsafe_allow_html=True)
+    with heqi_subtabs[1]:
+        svg = build_nine_palace_svg(month_heqi)
+        st.markdown(svg, unsafe_allow_html=True)
 
-        with heqi_subtabs[2]:
-            svg = build_nine_palace_svg(day_heqi)
-            st.markdown(svg, unsafe_allow_html=True)
+    with heqi_subtabs[2]:
+        svg = build_nine_palace_svg(day_heqi)
+        st.markdown(svg, unsafe_allow_html=True)
 
-        with heqi_subtabs[3]:
-            svg = build_nine_palace_svg(hour_heqi)
-            st.markdown(svg, unsafe_allow_html=True)
+    with heqi_subtabs[3]:
+        svg = build_nine_palace_svg(hour_heqi)
+        st.markdown(svg, unsafe_allow_html=True)
 
-        st.divider()
-        render_key_metrics(pan, strict)
-
-        render_history()
-
-    # ===================== 年月日時詳情 Tab =====================
-    with main_tabs[1]:
-        st.subheader("年月日時層級合炁（嚴格依歌訣計算）")
-
-        # 雷霆年
-        with st.container(border=True):
-            st.markdown("### 📅 雷霆年")
-            if is_advanced:
-                st.caption("據「雷霆合炁停年歌」及「昇玄上局年起例」")
-                render_source_box("雷霆合炁停年歌", HEQI_STOP_YEAR_RHYME)
-            st.markdown(f"**停處（嚴格計算）**：{strict.get('stop_branch', '—')}")
-            st.markdown(f"**年中心星（起年例）**：{strict.get('year_center_star', '—')}")
-            if is_advanced:
-                st.markdown("**雷霆年昇玄值向**：")
-                st.json(pan.get("雷霆年昇玄值向", {}))
-                st.markdown("**雷霆年合炁**：")
-                st.json(pan.get("雷霆年合炁", {}))
-
-        # 雷霆月
-        with st.container(border=True):
-            st.markdown("### 🌙 雷霆月")
-            if is_advanced:
-                render_source_box("起月例", HEQI_MONTH_RHYME)
-            st.markdown(f"**月中心星**：{strict.get('month_center_star', pan.get('雷霆月', '—'))}")
-            if is_advanced:
-                st.markdown("**雷霆月局 / 合炁**：")
-                st.json({"月局": pan.get("雷霆月局"), "月合炁": pan.get("雷霆月合炁")})
-
-        # 雷霆日 + 時（進階顯示更多）
-        with st.container(border=True):
-            st.markdown("### ☀️ 雷霆日 / ⏰ 雷霆時")
-            if is_advanced:
-                render_source_box("起日例", HEQI_DAY_RHYME)
-                render_source_box("起時例", HEQI_HOUR_RHYME)
-            st.markdown(f"**日方合炁**：{pan.get('雷霆日方合炁')}")
-            st.markdown(f"**雷霆時**：{pan.get('雷霆時')}")
-            if is_advanced:
-                st.json({"日局": pan.get("雷霆日局"), "時合炁": pan.get("雷霆時合炁值山向定局")})
-
-        if not is_advanced:
-            st.success("新手模式已簡化層級細節。如需完整歌訣與多宮飛遁資料，請切換進階模式。")
-
-    # ===================== 古籍對照 & 原文依據 Tab =====================
-    with main_tabs[2]:
-        st.subheader("📖 古籍對照與 verbatim 歌訣（100% 原文 traceability）")
-
-        st.markdown("### 核心歌訣（直接來自 rules.py）")
-        render_source_box("雷霆合炁停年歌 + 停年立成局", HEQI_STOP_YEAR_RHYME, "原文第91-101行")
-        render_source_box("起年例（日夏太陽方合炁）", "甲庚血刃丙壬金丁癸，還從月孛尋六己。台將紫炁戊乙辛，偏向日邊臨收入中宮飛出。")
-        render_source_box("昇玄上局年起例（起雷公）", "甲己順羊逆巽宮乙庚順虎逆壬同丙辛順犬逆坤位丁壬順丑逆乾中戊癸順辰逆艮上此為年例起行蹤。")
-        render_source_box("起月例", HEQI_MONTH_RHYME)
-        render_source_box("起日例", HEQI_DAY_RHYME)
-        render_source_box("起時例", HEQI_HOUR_RHYME)
-
-        st.divider()
-        st.markdown("### 完整術語解釋（含原文片段）")
-        search = st.text_input("🔍 搜尋術語或關鍵字", key="full_glossary_search")
-        for term, desc in TERM_GLOSSARY.items():
-            if not search or search.lower() in term.lower() or search.lower() in desc.lower():
-                with st.expander(term, expanded=False):
-                    st.markdown(desc)
-                    st.caption("（以上解釋已附原文依據片段，完整歌訣見上方及 rules.py）")
-
-    # ===================== 工具與匯出 Tab =====================
-    with main_tabs[3]:
-        st.subheader("🛠️ 工具與匯出")
-
-        # 匯出
-        md_text = generate_markdown_export(
-            pan, gz,
-            final_results.get("clockwise", {}),
-            final_results.get("anticlockwise", {}),
-        )
-        st.download_button(
-            "⬇️ 下載 Markdown 排盤報告",
-            data=md_text.encode("utf-8"),
-            file_name=f"雷霆曜氣_{r_year}{r_month:02d}{r_day:02d}_{r_hour:02d}{r_minute:02d}.md",
-            mime="text/markdown",
-            use_container_width=True
-        )
-
-        if is_advanced:
-            st.code(md_text, language="markdown")
-
-        st.divider()
-        render_history()
-
-        if is_advanced:
-            with st.expander("原始計算資料（進階）"):
-                st.json(pan)
+    st.divider()
+    # 關鍵指標區塊（手機已透過 CSS 調整為細字 + 較好排版）
+    render_key_metrics(pan, strict)
 
 except Exception as e:
     st.error(f"生成盤局時發生錯誤：{str(e)}")
     st.exception(e)
-
-# ── 書目 Tab（保留舊的第二個 tab 作為參考） ──
-with st.expander("📚 專案書目與說明（舊版內容）", expanded=False):
-    try:
-        with open("README.md", "r", encoding="utf-8") as f:
-            readme_content = f.read()
-        st.markdown(readme_content, unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.info("README.md 未找到。")
 
 
 # ===========================================================================
@@ -728,13 +597,43 @@ st.markdown(
         display: block;
     }
 
+    /* 關鍵指標 (st.metric) 手機優化：字體細小、排版好看、兩欄 */
+    .stMetric {
+        padding: 0.15rem 0.25rem !important;
+        margin-bottom: 0.1rem !important;
+    }
+    .stMetricValue {
+        font-size: 0.9rem !important;
+        line-height: 1.1 !important;
+    }
+    .stMetricLabel {
+        font-size: 0.6rem !important;
+        line-height: 1.0 !important;
+        white-space: nowrap;
+    }
+
     @media (max-width: 768px) {
-        .stApp { font-size: 1.08em; line-height: 1.4; }
+        .stApp { font-size: 1.0em; line-height: 1.3; }
         .nine-palace-svg { max-width: 100%; }  /* 手機填滿 */
-        .stTabs [data-baseweb="tab-list"] { flex-wrap: wrap; font-size: 1.05em; }
-        .stContainer, .result-card { padding: 16px 12px; margin-bottom: 14px; }
-        .stMarkdown h3, .stSubheader { font-size: 1.15em; }
-        .stTabs [data-baseweb="tab"] { padding: 8px 4px; }
+        .stTabs [data-baseweb="tab-list"] { flex-wrap: wrap; font-size: 1.0em; }
+        .stContainer, .result-card { padding: 10px 8px; margin-bottom: 8px; }
+        .stMarkdown h3, .stSubheader { font-size: 1.0em; }
+
+        /* 手機上關鍵指標：4欄變成 2欄 (每欄 50%)，字體再細 */
+        div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+            padding: 0 2px !important;
+        }
+        .stMetric {
+            padding: 0.1rem 0.15rem !important;
+        }
+        .stMetricValue {
+            font-size: 0.82rem !important;
+        }
+        .stMetricLabel {
+            font-size: 0.55rem !important;
+        }
     }
 
     @media (min-width: 1600px) {

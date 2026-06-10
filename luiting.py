@@ -640,7 +640,7 @@ class Luiting:
         return dict(zip(mountain_names, layout))
 
     def luitingheqiyear(self) -> Dict[str, str]:
-        """計算雷霆年合炁（八宮分佈，嚴格版）。
+        """計算雷霆年合炁（九宮分佈，嚴格版，包含中宮起星）。
 
         依據同「起年例」：「...收入中宮飛出。」
         並結合停年歌「便從停處起正月...即以月星歸中通細推」
@@ -650,8 +650,8 @@ class Luiting:
         if not center_star:
             return {}
         layout = new_list(STAR_12, center_star)[:9]
-        # 八宮對應（去中）
-        return dict(zip(GONG_8, layout[1:9] if len(layout) > 1 else layout))
+        # 九宮對應，包含中宮起星
+        return dict(zip(GONG_9, layout))
 
     # ------------------------------------------------------------------
     # 雷霆月合炁 — Monthly Heqi
@@ -741,7 +741,7 @@ class Luiting:
         palace_names = list("巽震坤坎離艮兌乾中")
         result: Dict[str, str] = {}
         for star in stars:
-            layout = _nlist(STAR_12, star)[0:8]
+            layout = _nlist(STAR_12, star)[0:9]  # 修復：包含中宮
             result.update(dict(zip(palace_names, layout)))
         return result
 
@@ -756,7 +756,7 @@ class Luiting:
         palace_names = list("巽震坤坎離艮兌乾中")
         result: Dict[str, str] = {}
         for star in stars:
-            layout = _nlist(STAR_12, star)[0:8]
+            layout = _nlist(STAR_12, star)[0:9]  # 修復：包含中宮
             result.update(dict(zip(palace_names, layout)))
         return result
 
