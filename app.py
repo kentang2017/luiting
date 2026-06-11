@@ -129,7 +129,7 @@ def generate_markdown_export(pan: Dict, gz: str, clockwise: Dict, anticlockwise:
         f"- **日干支**：{pan.get('日干支')}（{pan.get('日陰陽')}）",
         f"- **日干支納音**：{pan.get('日干支納音')}",
         f"",
-        f"## 雷霆年月日時箭",
+        f"## 雷霆年月日時箭 + 雷公箭",
     ]
 
     arrows = pan.get("雷霆年月日時箭", [])
@@ -138,7 +138,18 @@ def generate_markdown_export(pan: Dict, gz: str, clockwise: Dict, anticlockwise:
         meaning = ARROW_MEANINGS.get(arrow, "")
         lines.append(f"- **{label}**：{arrow} {meaning}")
 
+    leigong_arrow = pan.get("雷公箭", "")
+    if leigong_arrow:
+        meaning = ARROW_MEANINGS.get(leigong_arrow, "")
+        lines.append(f"- **雷公箭**：{leigong_arrow} {meaning}")
+
     lines.extend([
+        f"",
+        f"## 雷霆合炁（含旬合炁）",
+        f"- **雷霆旬**：{pan.get('雷霆旬')}",
+        f"- **雷霆旬合炁**：{pan.get('雷霆旬合炁')}",
+        f"- **雷霆年合炁**（中宮起星）：{pan.get('雷霆年合炁', {}).get('中', '')}",
+        f"- **雷霆月合炁**（中宮起星）：{pan.get('雷霆月合炁', {}).get('中', '')}",
         f"",
         f"## 吉凶神煞",
         f"- **金虎大煞**：{pan.get('金虎大煞')}",
@@ -154,7 +165,7 @@ def generate_markdown_export(pan: Dict, gz: str, clockwise: Dict, anticlockwise:
         f"- **四季禽星應事**：{pan.get('四季禽星應事')}",
         f"",
         f"## 雷公風伯雨伯",
-        f"- **雷公**：{pan.get('雷公')}",
+        f"- **雷公**：{pan.get('雷公')}（雷公箭：{pan.get('雷公箭', '—')}）",
         f"- **風伯**：{pan.get('風伯')}",
         f"- **雨伯**：{pan.get('雨伯')}",
         f"",
@@ -318,6 +329,12 @@ def gen_results(year: int, month: int, day: int, hour: int, minute: int) -> Dict
 # ===========================================================================
 
 # 五行著色邏輯（美學主義，傳統風水配色）
+# 最新星曜五行歸屬（使用者指定）：
+# 木: 太陽, 奇羅, 紫炁
+# 水: 金水, 水潦, 月孛
+# 土: 台將, 土溽
+# 金: 天罡, 血刃
+# 火: 燥火, 丙乙
 PALACE_ELEMENTS = {
     "乾": "金", "兌": "金",
     "艮": "土", "坤": "土",
@@ -328,26 +345,33 @@ PALACE_ELEMENTS = {
 }
 
 ELEMENT_COLORS = {
-    "木": "#228B22",   # 森林綠
-    "火": "#DC143C",   # 深紅
-    "土": "#DAA520",   # 黃金土
-    "金": "#C0C0C0",   # 銀白
-    "水": "#4682B4",   # 鋼藍
+    # 傳統五行文字配色（適合深色背景的高對比度）
+    "木": "#22c55e",   # 鮮木綠（鮮明、生命力）
+    "火": "#f43f5e",   # 火紅 / 玫瑰紅（醒目、熱烈）
+    "土": "#eab308",   # 土黃 / 琥珀黃（穩重、溫暖）
+    "金": "#e0e7ff",   # 金屬銀白光（高亮、冷冽）
+    "水": "#38bdf8",   # 水藍 / 天青（清澈、流動）
 }
 
 STAR_ELEMENTS = {
-    "血刃": "金",
+    # 按五行重新配置（使用者指定最新版）
+    # 木: 太陽, 奇羅, 紫炁
+    # 水: 金水, 水潦, 月孛
+    # 土: 台將, 土溽
+    # 金: 天罡, 血刃
+    # 火: 燥火, 丙乙
+    "太陽": "木",
+    "奇羅": "木",
+    "紫炁": "木",
     "金水": "水",
     "水潦": "水",
-    "天罡": "金",
-    "月孛": "火",
-    "土溽": "土",
-    "奇羅": "木",
-    "燥火": "火",
-    "丙乙": "土",
-    "太陽": "火",
-    "紫炁": "木",
+    "月孛": "水",
     "台將": "土",
+    "土溽": "土",
+    "天罡": "金",
+    "血刃": "金",
+    "燥火": "火",
+    "丙乙": "火",
 }
 
 # ===========================================================================
@@ -371,18 +395,24 @@ def render_key_metrics(pan: Dict, strict: Dict):
     with cols[0]:
         st.metric("年箭", arrows[0] or "—", help="據雷霆箭法詩斷")
 
-    # 金虎大煞
+    # 雷公箭 (新增)
+    leigong_a = pan.get("雷公箭", "") or ""
     with cols[1]:
-        gt = pan.get("金虎大煞", "—")
-        st.metric("金虎大煞", gt, help="金火大煞例")
+        st.metric("雷公箭", leigong_a or "—", help="先召直符召雷公，然後使雷箭")
 
-    # 停處（嚴格計算）
+    # 合炁停處（嚴格計算）
     with cols[2]:
         stop = strict.get("stop_branch") or "—"
         st.metric("合炁停處", stop, help="雷霆合炁停年歌 + 逆數")
 
-    # 天氣
+    # 金虎大煞
     with cols[3]:
+        gt = pan.get("金虎大煞", "—")
+        st.metric("金虎大煞", gt, help="金火大煞例")
+
+    # 第二排：天氣 + 其他
+    cols2 = st.columns(4)
+    with cols2[3]:
         weather = pan.get("天氣", "—")
         st.metric("天氣預測", weather, help="星禽應事")
 
@@ -397,6 +427,12 @@ def render_key_metrics(pan: Dict, strict: Dict):
         st.metric("雷霆月", pan.get("雷霆月", "—"))
     with cols2[3]:
         st.metric("值符 / 傳音", f"{pan.get('值符','—')} / {pan.get('傳音','—')}")
+
+    # 額外一行顯示旬合炁中心星（主頁排盤明顯反映）
+    cols3 = st.columns(4)
+    with cols3[0]:
+        xun_info = pan.get("雷霆旬", {}) or {}
+        st.metric("旬合炁", f"{xun_info.get('旬首','—')} → {xun_info.get('旬星','—')}", help="依起旬例")
 
 
 # create_plotly_nine_palace 已移除（盤式改用 SVG，不再使用 Plotly 建構九宮格）
@@ -480,21 +516,37 @@ try:
     st.subheader(f"📋 {pan.get('日期時間')}")
     st.markdown(f"**{gz}**")
 
+    # 直接在主頁排盤區文字反映新增的旬合炁與雷公箭
+    xun = pan.get("雷霆旬", {}) or {}
+    xun_center = xun.get("旬星", "")
+    leigong_arrow_val = pan.get("雷公箭", "")
+    if xun or leigong_arrow_val:
+        st.markdown(
+            f"**旬合炁**：{xun.get('旬首', '—')}旬（中宮起星：**{xun_center or '—'}**）　"
+            f"**雷公箭**：**{leigong_arrow_val or '—'}**"
+        )
+
     st.divider()
 
-    # 合炁排盤 - 使用純 SVG（不使用 Plotly），並以分頁呈現年月日時四版
-    st.markdown("**合炁排盤**")
+    # 合炁排盤 - 使用純 SVG（不使用 Plotly），並以分頁呈現年月日旬時
+    st.markdown("**合炁排盤**（年→月→日→旬→時）")
 
-    # 準備四個層級的資料（盡量相容現有 pan 結構）
+    # 準備層級的資料（盡量相容現有 pan 結構）
+    xun_heqi = pan.get("雷霆旬合炁", {}) or {}
     year_heqi = pan.get("雷霆年合炁", {}) or {}
     month_heqi = pan.get("雷霆月合炁", {}) or {}
     day_heqi = final_results.get("clockwise", {}) or pan.get("雷霆日局", {}) or {}
     hour_raw = pan.get("雷霆時合炁值山向定局", {}) or {}
 
-    # 確保年合炁 中宮有起星 (來源現在已包含，但這裡明確設定以保證)
+    # 確保各合炁 中宮有起星
     year_center = strict.get("year_center_star", "") or ""
     if year_center:
         year_heqi["中"] = year_center
+
+    # 旬合炁中心星（直接來自新實作）
+    xun_center = pan.get("雷霆旬", {}).get("旬星", "") or ""
+    if xun_center:
+        xun_heqi["中"] = xun_center
 
     # 修正時合炁：加入起星（雷霆時）到中宮，並從時合炁山向對應宮位填星
     hour_heqi = {}
@@ -512,7 +564,7 @@ try:
         elif p not in hour_heqi:
             hour_heqi[p] = "-"
 
-    heqi_subtabs = st.tabs(["年合炁", "月合炁", "日合炁", "時合炁"])
+    heqi_subtabs = st.tabs(["年合炁", "月合炁", "日合炁", "旬合炁", "時合炁"])
 
     with heqi_subtabs[0]:
         svg = build_nine_palace_svg(year_heqi)
@@ -527,6 +579,11 @@ try:
         st.markdown(svg, unsafe_allow_html=True)
 
     with heqi_subtabs[3]:
+        svg = build_nine_palace_svg(xun_heqi)
+        st.markdown(svg, unsafe_allow_html=True)
+        st.caption("依《雷霆箭煞年月樞機》「起旬例」：甲子奇羅甲戌罡，甲申金水甲午陽。甲辰紫炁甲寅分丙乙，定布吉凶方。")
+
+    with heqi_subtabs[4]:
         svg = build_nine_palace_svg(hour_heqi)
         st.markdown(svg, unsafe_allow_html=True)
 

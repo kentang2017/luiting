@@ -28,7 +28,7 @@
 
 | Feature | Description | 功能說明 |
 | :--- | :--- | :--- |
-| ⚡ Thunder Qi Chart | Full year / month / day / hour chart generation | 年、月、日、時完整排盤 |
+| ⚡ Thunder Qi Chart | Full year / month / day / hour / xun (旬) chart generation | 年、月、日、時、旬完整排盤 |
 | 🔮 Heqi Calculation | Luiting Heqi (合炁) directional analysis | 雷霆合炁到向分析 |
 | 🌟 Shengxuan Direction | Ascending Mysterious value & direction | 昇玄值向推算 |
 | 🐯 Golden Tiger Sha | Golden Tiger Great Sha positioning | 金虎大煞方位 |
@@ -57,7 +57,7 @@ This program combines classical texts with modern astronomical calculations to p
 
 道法會元卷一百二十九載：「雷霆玄妙，出乎樞機之造化，達乎奧理之冥途。五行運用，不出陰陽。至道之內，樞陽機陰，雷善霆惡，萬物厥有至符。」其法以卯為雷門，子為雷穴，巽為雷戶，離為雷所，運乎坤，傍乎乾，藏乎子，出乎震。翼軫主雷，虛危主雪，箕星好風，畢星好雨，星宿主晴，各得所在之方，以觀天象、測氣候、定吉凶。
 
-本程式依據古籍記載，結合現代天文曆法計算，提供雷霆曜氣年、月、日、時之排盤，包括雷霆合炁、昇玄值向、金虎大煞、流火凶星、值符、傳音、帝星等諸項推算，以便用者查閱參考。
+本程式依據古籍記載，結合現代天文曆法計算，提供雷霆曜氣年、月、日、時、旬之排盤，包括雷霆合炁（年月日時旬）、昇玄值向、金虎大煞、流火凶星、值符、傳音、帝星等諸項推算，以便用者查閱參考。
 
 ---
 

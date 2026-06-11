@@ -3,7 +3,7 @@
 雷霆曜氣核心計算引擎 — Luiting (Thunder Qi) Calculation Engine
 
 基於《道法會元》卷一百二十九《雷霆箭煞年月樞機》，實現雷霆曜氣排盤的
-年、月、日、時合炁、昇玄值向、金虎大煞、流火凶星、值符、傳音、帝星、
+年、月、日、時、旬合炁、昇玄值向、金虎大煞、流火凶星、值符、傳音、帝星、
 雷箭等各項計算。
 
 典籍出處：
@@ -100,23 +100,6 @@ LUNAR_DAY_NAMES: List[str] = [
 
 # 中文數字
 CNUM: str = "一二三四五六七八九十"
-
-# 六甲旬
-LIUJIA_SHUN: Dict[str, str] = {
-    "甲子": "甲子", "甲戌": "甲戌", "甲申": "甲申",
-    "甲午": "甲午", "甲辰": "甲辰", "甲寅": "甲寅",
-}
-
-# 六甲旬起星（起旬例）
-# 據《雷霆箭煞年月樞機》：「甲子奇羅甲戌罡，甲申金水甲午陽。甲辰紫炁甲寅分丙乙。」
-LIUJIA_SHUN_STAR: Dict[str, str] = {
-    "甲子": "奇羅",
-    "甲戌": "天罡",
-    "甲申": "金水",
-    "甲午": "太陽",
-    "甲辰": "紫炁",
-    "甲寅": "丙乙",
-}
 
 # 九宮名稱
 GONG_9: List[str] = ["中", "乾", "兌", "艮", "離", "坎", "坤", "震", "巽"]
@@ -433,13 +416,16 @@ class Luiting:
 
     根據《道法會元》卷一百二十九《雷霆箭煞年月樞機》的規則，
     計算指定年月日時的雷霆曜氣盤局，包括：
-    - 雷霆合炁（年、月、日、時）
+    - 雷霆合炁（年、月、日、時、旬）
     - 昇玄值向
     - 金虎大煞、流火凶星
     - 值符、傳音
     - 帝星（月帝星、日帝星）
-    - 雷霆箭（年、月、日、時箭）
+    - 雷霆箭（年、月、日、時箭）、雷公箭
     - 飛星遁宿、天氣預測
+
+    旬合炁依「起旬例」：
+    「甲子奇羅甲戌罡，甲申金水甲午陽。甲辰紫炁甲寅分丙乙，定布吉凶方。」
 
     Args:
         year: 公曆年。
@@ -886,6 +872,39 @@ class Luiting:
         lunar_mon = int(self.lunar_date_detail()["月"].replace("月", ""))
         return get_heqi_month_from_stop(stop, lunar_mon)
 
+    def heqi_xun_center_star(self) -> str:
+        """公開：依《雷霆箭煞年月樞機》「起旬例」取得旬合炁中宮起星。
+        原文：「甲子奇羅甲戌罡，甲申金水甲午陽。甲辰紫炁甲寅分丙乙，定布吉凶方。」
+        """
+        dgz = self.gangzhi()[2]
+        _, star = _find_shun(dgz)
+        return star or ""
+
+    def xun(self) -> Dict[str, str]:
+        """返回當前日干支所屬六甲旬資訊（旬首 + 旬合炁起星）。"""
+        dgz = self.gangzhi()[2]
+        shun, star = _find_shun(dgz)
+        return {"旬首": shun or "", "旬星": star or "", "日干支": dgz}
+
+    def luitingheqixun(self) -> Dict[str, str]:
+        """計算雷霆旬合炁（嚴格版）。
+
+        依據《雷霆箭煞年月樞機》原文「起旬例」：
+        「甲子奇羅甲戌罡，甲申金水甲午陽。甲辰紫炁甲寅分丙乙，定布吉凶方。」
+
+        實作步驟（與年合炁、月合炁一致的「入中宮順飛」模式）：
+        1. 取日干支 → _find_shun() 取得所屬六甲旬首。
+        2. 直接由 rules.LIUJIA_SHUN_STAR 對照取得該旬的中宮起星（旬星）。
+        3. 將該星置「中宮」，使用 new_list(STAR_12, center_star) 順飛佈 9 宮。
+        4. 返回九宮對應結果（中宮為起星，其餘依 STAR_12 順序飛佈）。
+        """
+        dgz = self.gangzhi()[2]
+        _, center_star = _find_shun(dgz)
+        if not center_star:
+            return {}
+        layout = new_list(STAR_12, center_star)[:9]
+        return dict(zip(GONG_9, layout))
+
     # ------------------------------------------------------------------
     # 雷霆箭 — Thunder Arrows
     # ------------------------------------------------------------------
@@ -943,6 +962,27 @@ class Luiting:
         gz = self.gangzhi()[3]
         matched = multi_key_dict_get(self._month_day_hour_arrow_maps(), gz[0])
         return matched.get(gz[1], "") if matched else ""
+
+    def leigong_arrow(self) -> str:
+        """計算雷公箭。
+
+        依據《雷霆箭煞年月樞機》「起雷次舍與雷公位合時」及箭法詩斷：
+        先尋雷公所在方位（由日干支所屬六甲旬決定，見 find_three_uncle），
+        再以日干 + 雷公地支對應的二十四山位置，查雷霆箭（與月日時箭同表）。
+        雷公箭用於「先召直符召雷公，次行天罡號，今然後使雷箭」之實務。
+        """
+        uncles = self.find_three_uncle()
+        leigong_branch = uncles.get("雷公", "")
+        if not leigong_branch:
+            return ""
+
+        dgz = self.gangzhi()[2]  # 用當日干支的干，配雷公支，組成對應位置
+        # 直接用日干 + 雷公支 查月/日/時箭共用表（二十四位對應箭名）
+        fake_gz = dgz[0] + leigong_branch
+        matched = multi_key_dict_get(self._month_day_hour_arrow_maps(), fake_gz[0])
+        if matched:
+            return matched.get(leigong_branch, "") or ""
+        return ""
 
     # ------------------------------------------------------------------
     # 金虎大煞 — Golden Tiger Great Sha
@@ -1343,10 +1383,10 @@ class Luiting:
         Returns:
             包含所有排盤數據的字典，鍵包括：
             - 日期時間、干支、農曆、節氣
-            - 雷霆年/月/日/時合炁
+            - 雷霆年/月/日/時/旬合炁
             - 昇玄值向、金虎大煞、流火凶星
             - 值符、傳音、帝星
-            - 雷霆箭、飛星遁宿、天氣
+            - 雷霆箭（含雷公箭）、飛星遁宿、天氣
             - 雷公、風伯、雨伯
         """
         gz = self.gangzhi()
@@ -1417,12 +1457,15 @@ class Luiting:
                 self.day_arrow(),
                 self.hour_arrow(),
             ],
+            "雷公箭": self.leigong_arrow(),
             "雷霆年昇玄值向": self.luitingyear(),
             "雷霆年合炁到向": self.luitingheqiyear_mountain(),
             "雷霆年合炁": self.luitingheqiyear(),
             "雷霆月局": self.luitingmonth_ninegong(),
             "雷霆月合炁": self.luitingheqimonth(),
             "雷霆月": self.luitingmonth(),
+            "雷霆旬": self.xun(),
+            "雷霆旬合炁": self.luitingheqixun(),
             "雷霆日方合炁": self._day_direction_heqi(dgz[0]),
             "雷霆日局": self.luitingday_ninegong(),
             "雷霆時": self.luitinghour(),
